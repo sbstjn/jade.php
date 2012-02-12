@@ -399,8 +399,8 @@ class PHPDumper implements DumperInterface
      */
     protected function replaceHolders($string, $decode = false)
     {
-        return preg_replace_callback("/{{([^}]+)}}/", function($matches) use($decode) {
-            return sprintf('<?php echo %s ?>', $decode ? html_entity_decode($matches[1]) : $matches[1]);
+        return preg_replace_callback("/\#{([^}]+)}/", function($matches) use($decode) {
+            return sprintf('<?php echo $%s ?>', $decode ? html_entity_decode($matches[1]) : $matches[1]);
         }, $string);
     }
 }
