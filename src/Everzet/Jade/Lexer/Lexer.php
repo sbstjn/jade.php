@@ -393,9 +393,9 @@ class Lexer implements LexerInterface
                   , $indents
                   , $this->lastIndents + 1
                 ));
-            } elseif ($this->lastIndents > $indents) {
-                $count = $this->lastIndents - $indents;
+            } elseif ($this->lastIndents > $indents && ($count = $this->lastIndents - $indents) == (int)$count) {
                 $token->type = 'outdent';
+                
                 while (--$count) {
                     $this->deferToken($this->takeToken('outdent'));
                 }
