@@ -3,6 +3,7 @@
 namespace Everzet\Jade\Lexer;
 
 use Everzet\Jade\Exception\Exception;
+use Everzet\Jade\Exception\JadeException;
 
 /*
  * This file is part of the Jade.php.
@@ -366,45 +367,33 @@ class Lexer implements LexerInterface
      */
     protected function scanIndentation()
     {
-        $matches = array();
+      $matches = array();
 
-        if (preg_match('/^\n( *)/', $this->input, $matches)) {
-            $this->lineno++;
-            $this->consumeInput(mb_strlen($matches[0]));
+      if (preg_match('/^\n( *)/', $this->input, $matches)) {
+        $this->lineno++;
+        
+        $this->consumeInput(mb_strlen($matches[0]));
 
-            $token      = $this->takeToken('indent', $matches[1]);
-            $indents    = mb_strlen($token->value) / 2;
-
-
-            if (mb_strlen($this->input) && "\n" === $this->input[0]) {
-                $token->type = 'newline';
-
-                return $token;
-            } elseif (0 !== $indents % 1) {
-                throw new Exception(sprintf(
-                    'Invalid indentation found. Spaces count must be a multiple of two, but %d got.'
-                  , mb_strlen($token->value)
-                ));
-            } elseif ($this->lastIndents === $indents) {
-                $token->type = 'newline';
-            } elseif ($this->lastIndents + 1 < $indents) {
-                throw new Exception(sprintf(
-                    'Invalid indentation found. Got %d, but expected %d.'
-                  , $indents
-                  , $this->lastIndents + 1
-                ));
-            } elseif ($this->lastIndents > $indents && ($count = $this->lastIndents - $indents) == (int)$count) {
-                $token->type = 'outdent';
-                
-                while (--$count) {
-                    $this->deferToken($this->takeToken('outdent'));
-                }
-            }
-
-            $this->lastIndents = $indents;
-
-            return $token;
+        $token    = $this->takeToken('indent', $matches[1]);
+        $indents  = mb_strlen($token->value) / 2;
+        
+        if (mb_strlen($this->input) && "\n" === $this->input[0] || $this->lastIndents === $indents) {
+          $token->type = 'newline';
+          return $token;
+        } elseif ($this->lastIndents > $indents && ($count = $this->lastIndents - $indents) == (int)$count) {
+          $token->type = 'outdent';
+          
+          while (--$count) {
+            $this->deferToken($this->takeToken('outdent')); }
+        } elseif (($indents - $this->lastIndents) > 1) {
+          throw new JadeException(JadeException::TOO_DEEP, $this->lineno);
+        } elseif (!is_int($indents)) {
+          throw new JadeException(JadeException::NOT_EVEN, $this->lineno);
         }
+        
+        $this->lastIndents = $indents;
+        return $token;
+      }
     }
 
     /**

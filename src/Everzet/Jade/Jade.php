@@ -22,6 +22,8 @@ class Jade
     protected $parser;
     protected $dumper;
     protected $cache;
+    
+    var $source;
 
     /**
      * Initialize parser. 
@@ -44,9 +46,9 @@ class Jade
      */
     public function render($input)
     {
-        $source = $this->getInputSource($input);
-        $parsed = $this->parser->parse($source);
-
+        $this->source = $this->getInputSource($input);
+        $parsed = $this->parser->parse($this->source);
+        
         return $this->dumper->dump($parsed);
     }
 
